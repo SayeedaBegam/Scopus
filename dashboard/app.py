@@ -66,6 +66,9 @@ if "processor" not in st.session_state:
 if "processed_df" not in st.session_state:
     st.session_state.processed_df = None
 
+if "report_df" not in st.session_state:
+    st.session_state.report_df = None
+
 if "current_page" not in st.session_state:
     st.session_state.current_page = "Home"
 
@@ -112,6 +115,16 @@ def render_info_cards(items) -> None:
         for title, body in items
     )
     st.markdown(f'<div class="info-card-grid">{cards}</div>', unsafe_allow_html=True)
+
+
+def filter_report_dataframe(report_df: pd.DataFrame, professor_name: str, countries: list[str]) -> pd.DataFrame:
+    """Filter the manual reporting dataframe using the analytics selections."""
+    filtered = report_df.copy()
+    if professor_name != "All Professors":
+        filtered = filtered[filtered["UTN Researcher (s)"] == professor_name]
+    if countries:
+        filtered = filtered[filtered["Country"].isin(countries)]
+    return filtered.reset_index(drop=True)
 
 
 def show_upload_page():
@@ -163,6 +176,7 @@ def show_upload_page():
 
                     st.session_state.processor = processor
                     st.session_state.processed_df = processor.get_processed_df()
+                    st.session_state.report_df = processor.get_reporting_df()
                     st.session_state.data_loaded = True
 
                     st.markdown("### Processing Summary")
@@ -179,8 +193,32 @@ def show_upload_page():
                         st.metric("Institutions", stats["num_institutions"])
 
                     st.markdown("---")
-                    with st.expander("Preview of processed international collaborations"):
-                        st.dataframe(processor.get_processed_df().head(10), use_container_width=True)
+                    with st.expander("Preview of reporting rows"):
+                        st.dataframe(processor.get_reporting_df().head(10), use_container_width=True)
+
+                    st.markdown("---")
+                    st.markdown("### Reporting Output")
+                    report_df = processor.get_reporting_df()
+                    report_excel = create_manual_tracking_excel(report_df)
+                    report_csv = report_df.to_csv(index=False)
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="Download Reporting Excel",
+                            data=report_excel,
+                            file_name="international_joint_publications.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                        )
+                    with col2:
+                        st.download_button(
+                            label="Download Reporting CSV",
+                            data=report_csv,
+                            file_name="international_joint_publications.csv",
+                            mime="text/csv",
+                            use_container_width=True,
+                        )
 
                     st.markdown("---")
                     st.markdown("### Next Steps")
@@ -197,6 +235,7 @@ def show_upload_page():
                         if st.button("Upload New File", use_container_width=True):
                             st.session_state.data_loaded = False
                             st.session_state.processor = None
+                            st.session_state.report_df = None
                             st.rerun()
                 else:
                     st.error(process_message)
@@ -332,6 +371,7 @@ def show_manual_workflow_page():
                     processed_df = manual_to_processed_df(manual_df)
                     st.session_state.processor = StoredCollaborationProcessor(processed_df)
                     st.session_state.processed_df = processed_df
+                    st.session_state.report_df = manual_df
                     st.session_state.data_loaded = True
                     st.session_state.current_page = "Analytics"
                     st.rerun()
@@ -434,6 +474,7 @@ def show_professor_library_page():
                 processed_df = manual_to_processed_df(edited_df)
                 st.session_state.processor = StoredCollaborationProcessor(processed_df)
                 st.session_state.processed_df = processed_df
+                st.session_state.report_df = normalize_manual_dataframe(edited_df)
                 st.session_state.data_loaded = True
                 st.session_state.selected_professor = selected_professor
                 st.session_state.current_page = "Professor Profile"
@@ -503,6 +544,7 @@ def show_analytics_page():
 
     processor = st.session_state.processor
     df = st.session_state.processed_df
+    report_df = st.session_state.report_df
 
     render_page_header(
         "Analytics and Overview",
@@ -562,6 +604,12 @@ def show_analytics_page():
     if needs_review:
         filtered_df = filtered_df[filtered_df["Needs Review"] == "Yes"]
 
+    filtered_report_df = (
+        filter_report_dataframe(report_df, selected_professor, selected_country)
+        if report_df is not None
+        else pd.DataFrame()
+    )
+
     st.markdown(f"**Showing {len(filtered_df)} of {len(df)} rows**")
     st.dataframe(format_dataframe_for_display(filtered_df), use_container_width=True)
 
@@ -570,21 +618,23 @@ def show_analytics_page():
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Download as Excel", use_container_width=True, key="excel_prof"):
-            excel_data = create_professional_excel_export(filtered_df)
+            export_df = filtered_report_df if not filtered_report_df.empty else report_df
+            excel_data = create_manual_tracking_excel(export_df)
             st.download_button(
                 label="Download Excel",
                 data=excel_data,
-                file_name="international_collaborations.xlsx",
+                file_name="international_joint_publications.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
     with col2:
         if st.button("Download as CSV", use_container_width=True):
-            csv = filtered_df.to_csv(index=False)
+            export_df = filtered_report_df if not filtered_report_df.empty else report_df
+            csv = export_df.to_csv(index=False)
             st.download_button(
                 label="Download CSV",
                 data=csv,
-                file_name="international_collaborations.csv",
+                file_name="international_joint_publications.csv",
                 mime="text/csv",
                 use_container_width=True,
             )
@@ -694,6 +744,7 @@ def show_professor_directory():
         if st.button("Home", use_container_width=True):
             st.session_state.authenticated = False
             st.session_state.data_loaded = False
+            st.session_state.report_df = None
             st.rerun()
 
 
@@ -708,6 +759,7 @@ def show_professor_profile():
 
     processor = st.session_state.processor
     selected_professor = st.session_state.get("selected_professor")
+    report_df = st.session_state.report_df
 
     if not selected_professor:
         st.error("No professor selected.")
@@ -782,6 +834,12 @@ def show_professor_profile():
     if needs_review_filter:
         filtered_df = filtered_df[filtered_df["Needs Review"] == "Yes"]
 
+    filtered_report_df = (
+        filter_report_dataframe(report_df, selected_professor, selected_countries)
+        if report_df is not None
+        else pd.DataFrame()
+    )
+
     st.markdown(f"**Showing {len(filtered_df)} of {len(prof_data)} rows**")
     st.dataframe(format_dataframe_for_display(filtered_df), use_container_width=True)
 
@@ -802,21 +860,23 @@ def show_professor_profile():
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Download as Excel", use_container_width=True, key="export_prof_excel"):
-            excel_data = create_professional_excel_export(filtered_df, selected_professor)
+            export_df = filtered_report_df if not filtered_report_df.empty else report_df
+            excel_data = create_manual_tracking_excel(export_df, selected_professor)
             st.download_button(
                 label="Download Excel",
                 data=excel_data,
-                file_name=f"collaborations_{selected_professor.replace(' ', '_')}.xlsx",
+                file_name=f"international_joint_publications_{selected_professor.replace(' ', '_')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
     with col2:
         if st.button("Download as CSV", use_container_width=True, key="export_prof_csv"):
-            csv = filtered_df.to_csv(index=False)
+            export_df = filtered_report_df if not filtered_report_df.empty else report_df
+            csv = export_df.to_csv(index=False)
             st.download_button(
                 label="Download CSV",
                 data=csv,
-                file_name=f"collaborations_{selected_professor.replace(' ', '_')}.csv",
+                file_name=f"international_joint_publications_{selected_professor.replace(' ', '_')}.csv",
                 mime="text/csv",
                 use_container_width=True,
             )
@@ -835,6 +895,7 @@ def show_professor_profile():
         if st.button("Home", use_container_width=True):
             st.session_state.authenticated = False
             st.session_state.data_loaded = False
+            st.session_state.report_df = None
             st.rerun()
 
 
@@ -953,6 +1014,7 @@ def show_main_content():
             st.session_state.data_loaded = False
             st.session_state.processor = None
             st.session_state.processed_df = None
+            st.session_state.report_df = None
             st.session_state.current_page = "Home"
             st.rerun()
 

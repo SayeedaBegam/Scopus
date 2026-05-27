@@ -117,6 +117,19 @@ def render_info_cards(items) -> None:
     st.markdown(f'<div class="info-card-grid">{cards}</div>', unsafe_allow_html=True)
 
 
+def render_section_intro(title: str, text: str) -> None:
+    """Render a consistent section heading."""
+    st.markdown(
+        f"""
+        <div class="section-intro">
+            <h3>{title}</h3>
+            <p>{text}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def filter_report_dataframe(report_df: pd.DataFrame, professor_name: str, countries: list[str]) -> pd.DataFrame:
     """Filter the manual reporting dataframe using the analytics selections."""
     filtered = report_df.copy()
@@ -167,7 +180,10 @@ def show_upload_page():
                     st.dataframe(processor.raw_df.head(5), use_container_width=True)
 
                 st.markdown("---")
-                st.markdown("### Processing Data")
+                render_section_intro(
+                    "Processing Data",
+                    "The uploaded file is validated first, then transformed into UTN reporting rows and analytics-ready data.",
+                )
 
                 process_success, process_message = processor.process()
 
@@ -179,7 +195,10 @@ def show_upload_page():
                     st.session_state.report_df = processor.get_reporting_df()
                     st.session_state.data_loaded = True
 
-                    st.markdown("### Processing Summary")
+                    render_section_intro(
+                        "Processing Summary",
+                        "These metrics summarize the reporting rows created from the uploaded Scopus export.",
+                    )
                     stats = processor.get_statistics()
 
                     col1, col2, col3, col4 = st.columns(4)
@@ -193,11 +212,14 @@ def show_upload_page():
                         st.metric("Institutions", stats["num_institutions"])
 
                     st.markdown("---")
-                    with st.expander("Preview of reporting rows"):
+                    with st.expander("Preview of reporting rows", expanded=True):
                         st.dataframe(processor.get_reporting_df().head(10), use_container_width=True)
 
                     st.markdown("---")
-                    st.markdown("### Reporting Output")
+                    render_section_intro(
+                        "Reporting Output",
+                        "Download the structured reporting file immediately, or continue to the analytics and professor views.",
+                    )
                     report_df = processor.get_reporting_df()
                     report_excel = create_manual_tracking_excel(report_df)
                     report_csv = report_df.to_csv(index=False)
@@ -221,7 +243,10 @@ def show_upload_page():
                         )
 
                     st.markdown("---")
-                    st.markdown("### Next Steps")
+                    render_section_intro(
+                        "Next Steps",
+                        "Continue into the rest of the dashboard or upload another source file.",
+                    )
                     col1, col2, col3 = st.columns(3)
                     with col1:
                         if st.button("View Analytics", use_container_width=True):
@@ -270,7 +295,10 @@ def show_upload_page():
                     """
                 )
     else:
-        st.markdown("### Export Guidance")
+        render_section_intro(
+            "Export Guidance",
+            "Follow this export path in Scopus so the dashboard receives the fields needed for processing.",
+        )
         col1, col2 = st.columns([1.15, 1], gap="large")
 
         with col1:
@@ -351,14 +379,20 @@ def show_manual_workflow_page():
             with col4:
                 st.metric("Institutions", stats["institutions"])
 
-            st.markdown("### Preview")
+            render_section_intro(
+                "Preview",
+                "Review the uploaded reporting rows before saving them or generating the final workbook.",
+            )
             st.dataframe(manual_df, use_container_width=True)
 
             professors = get_manual_professors(manual_df)
             if professors:
                 st.caption("Detected professors: " + ", ".join(professors))
 
-            st.markdown("### Actions")
+            render_section_intro(
+                "Actions",
+                "Choose whether to store the records locally, open them in analytics, or generate the final Excel workbook.",
+            )
             col1, col2, col3 = st.columns(3)
 
             with col1:
@@ -393,7 +427,10 @@ def show_manual_workflow_page():
                         use_container_width=True,
                     )
         else:
-            st.markdown("### Workflow")
+            render_section_intro(
+                "Workflow",
+                "This path is for already curated collaboration files that should be converted directly into the UTN report format.",
+            )
             st.markdown(
                 """
                 1. Prepare or export the cleaned CSV using the international joint publications columns.
@@ -450,7 +487,10 @@ def show_professor_library_page():
         with col3:
             st.metric("Institutions", professor_df["Other University/Institution"].nunique())
 
-        st.markdown("### Edit Professor Records")
+        render_section_intro(
+            "Edit Professor Records",
+            "Update locally stored reporting rows for a selected professor, then save or reopen them in analytics.",
+        )
         edited_df = st.data_editor(
             professor_df,
             num_rows="dynamic",
@@ -487,7 +527,10 @@ def show_professor_library_page():
                 st.rerun()
 
     st.markdown("---")
-    st.markdown("### Add a Manual Record")
+    render_section_intro(
+        "Add a Manual Record",
+        "Create a new reporting row when a collaboration needs to be entered or corrected manually.",
+    )
 
     with st.form("add_manual_record_form"):
         col1, col2 = st.columns(2)
@@ -552,7 +595,10 @@ def show_analytics_page():
         "Analytics",
     )
 
-    st.markdown("### Key Statistics")
+    render_section_intro(
+        "Key Statistics",
+        "A high-level view of the current collaboration dataset generated from the reporting rows.",
+    )
     stats = processor.get_statistics()
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -565,7 +611,10 @@ def show_analytics_page():
         st.metric("Institutions", stats["num_institutions"])
 
     st.markdown("---")
-    st.markdown("### Visualizations")
+    render_section_intro(
+        "Visualizations",
+        "Use these views to compare countries, institutions, publication years, and professor activity.",
+    )
 
     tab1, tab2, tab3, tab4 = st.tabs(["By Country", "Over Time", "Top Institutions", "By Professor"])
     with tab1:
@@ -586,7 +635,10 @@ def show_analytics_page():
             st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("### All Collaboration Data")
+    render_section_intro(
+        "All Collaboration Data",
+        "Filter the current dataset and inspect the collaboration rows that drive the charts and exports.",
+    )
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -614,7 +666,10 @@ def show_analytics_page():
     st.dataframe(format_dataframe_for_display(filtered_df), use_container_width=True)
 
     st.markdown("---")
-    st.markdown("### Export Data")
+    render_section_intro(
+        "Export Data",
+        "Exports use the UTN reporting structure so the downloaded file matches the manual workbook layout.",
+    )
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Download as Excel", use_container_width=True, key="excel_prof"):
@@ -696,10 +751,16 @@ def show_professor_directory():
 
     stats_df = pd.DataFrame(professor_stats).sort_values("Collaborations", ascending=False)
 
-    st.markdown(f"### All Professors ({len(professors)})")
+    render_section_intro(
+        f"All Professors ({len(professors)})",
+        "This directory summarizes the current dataset by professor and lets you jump directly into a profile.",
+    )
     st.dataframe(stats_df, use_container_width=True, hide_index=True)
 
-    st.markdown("### Open a Professor Profile")
+    render_section_intro(
+        "Open a Professor Profile",
+        "Select a professor to review detailed collaboration patterns and export a focused report.",
+    )
     selected_professor = st.selectbox("Select professor", stats_df["Professor"].tolist())
     if st.button("Open Professor Profile", use_container_width=True):
         st.session_state.selected_professor = selected_professor
@@ -707,7 +768,10 @@ def show_professor_directory():
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### Overall Summary")
+    render_section_intro(
+        "Overall Summary",
+        "These totals describe the current coverage of the professor directory.",
+    )
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Total Professors", len(professors))
@@ -794,7 +858,10 @@ def show_professor_profile():
         st.metric("Years Active", f"{int(min(years))}-{int(max(years))}" if len(years) > 0 else "N/A")
 
     st.markdown("---")
-    st.markdown("### Collaboration Visualizations")
+    render_section_intro(
+        "Collaboration Visualizations",
+        "These views focus on a single professor's institution mix, country spread, and publication timeline.",
+    )
 
     col1, col2 = st.columns(2)
     with col1:
@@ -817,7 +884,10 @@ def show_professor_profile():
             st.markdown(f"- **{country}**: {count}")
 
     st.markdown("---")
-    st.markdown("### All Collaborations")
+    render_section_intro(
+        "All Collaborations",
+        "Review and filter the reporting rows associated with this professor.",
+    )
 
     col1, col2 = st.columns(2)
     with col1:
@@ -845,18 +915,27 @@ def show_professor_profile():
 
     st.markdown("---")
     if st.session_state.get("user_role") == "Admin":
-        st.markdown("### Admin: Edit Data")
+        render_section_intro(
+            "Admin Controls",
+            "Editing and deletion actions are still planned, but this area reserves the workflow for future admin management.",
+        )
         with st.expander("Edit Table Rows"):
             st.info("Planned enhancement: direct editing of institution names, countries, notes, and review status.")
         with st.expander("Delete Rows"):
             st.write("Planned enhancement: row deletion controls for incorrect collaboration entries.")
     else:
-        st.markdown("### Data Access")
+        render_section_intro(
+            "Data Access",
+            "Viewer access is limited to review and export-request actions.",
+        )
         if st.button("Request Download Access", use_container_width=True):
             st.success("Download request submitted. An administrator will review it within 1 to 2 business days.")
 
     st.markdown("---")
-    st.markdown("### Export Professor Data")
+    render_section_intro(
+        "Export Professor Data",
+        "Download this professor's filtered reporting rows in workbook or CSV format.",
+    )
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Download as Excel", use_container_width=True, key="export_prof_excel"):
@@ -1059,21 +1138,21 @@ st.markdown(
     """
     <style>
     :root {
-        --bg: #f4f7fb;
+        --bg: #f3f7fb;
         --surface: #ffffff;
-        --surface-soft: #f7fafc;
-        --border: #d8e2ec;
-        --ink: #17324a;
-        --muted: #5f7388;
-        --accent: #0d5e8c;
-        --accent-strong: #0a4a6e;
-        --accent-soft: #e8f3fb;
-        --shadow: 0 18px 48px rgba(23, 50, 74, 0.08);
+        --surface-soft: #f8fbfd;
+        --border: #d6e1eb;
+        --ink: #18344c;
+        --muted: #62788f;
+        --accent: #0d6b9b;
+        --accent-strong: #0a567a;
+        --accent-soft: #e7f2fa;
+        --shadow: 0 18px 44px rgba(23, 50, 74, 0.08);
     }
     .stApp {
         background:
-            radial-gradient(circle at top left, rgba(224, 238, 248, 0.85), transparent 24%),
-            linear-gradient(180deg, #f8fbfe 0%, #f1f6fb 100%);
+            radial-gradient(circle at top left, rgba(217, 235, 248, 0.88), transparent 26%),
+            linear-gradient(180deg, #f9fbfe 0%, #f2f6fa 100%);
         color: var(--ink);
     }
     [data-testid="stSidebar"] {
@@ -1086,7 +1165,7 @@ st.markdown(
         padding-bottom: 2.5rem;
     }
     .hero-panel {
-        background: linear-gradient(135deg, #ffffff 0%, #f0f7fd 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #f1f8fd 100%);
         border: 1px solid var(--border);
         border-radius: 22px;
         padding: 2rem 2.2rem;
@@ -1146,6 +1225,21 @@ st.markdown(
         padding: 1.5rem 1.55rem;
         margin-top: 0.25rem;
     }
+    .section-intro {
+        margin: 0.25rem 0 1rem 0;
+    }
+    .section-intro h3 {
+        margin: 0 0 0.35rem 0;
+        color: var(--ink);
+        font-size: 1.08rem;
+    }
+    .section-intro p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+        max-width: 900px;
+        font-size: 0.95rem;
+    }
     .content-panel h3 {
         margin-top: 0;
         margin-bottom: 0.65rem;
@@ -1170,6 +1264,12 @@ st.markdown(
         border-radius: 16px;
         box-shadow: 0 12px 28px rgba(17, 51, 76, 0.06);
     }
+    [data-testid="stMetricValue"] {
+        color: var(--ink);
+    }
+    [data-testid="stMetricLabel"] {
+        color: var(--muted);
+    }
     div[data-testid="stFileUploader"],
     div[data-testid="stDataFrame"],
     div[data-testid="stExpander"],
@@ -1179,6 +1279,22 @@ st.markdown(
         border: 1px solid var(--border);
         border-radius: 16px;
     }
+    div[data-testid="stFileUploader"] {
+        padding: 0.75rem 0.85rem;
+    }
+    div[data-testid="stDataFrame"] {
+        padding: 0.2rem;
+        box-shadow: 0 10px 24px rgba(17, 51, 76, 0.04);
+    }
+    div[data-testid="stExpander"] {
+        overflow: hidden;
+    }
+    div[data-testid="stForm"] {
+        padding: 0.8rem 1rem 1rem 1rem;
+    }
+    [data-testid="stForm"] input, [data-testid="stForm"] textarea {
+        background: #fbfdff;
+    }
     .stButton > button, .stDownloadButton > button {
         background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
         color: #ffffff;
@@ -1187,15 +1303,31 @@ st.markdown(
         font-weight: 600;
         padding: 0.65rem 1rem;
         box-shadow: 0 8px 18px rgba(13, 94, 140, 0.18);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
     }
     .stButton > button:hover, .stDownloadButton > button:hover {
         background: linear-gradient(180deg, #156f9f 0%, #0d5a85 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 22px rgba(13, 94, 140, 0.2);
     }
     .stButton > button[kind="secondary"] {
         background: #ffffff;
         color: var(--ink);
         border: 1px solid var(--border);
         box-shadow: none;
+    }
+    .stSelectbox > div > div,
+    .stMultiSelect > div > div,
+    .stTextInput > div > div > input,
+    .stNumberInput input,
+    .stTextArea textarea {
+        border-radius: 12px;
+        border-color: var(--border);
+        background: rgba(255,255,255,0.97);
+    }
+    .stCheckbox label,
+    .stRadio label {
+        color: var(--muted);
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 0.5rem;
@@ -1206,6 +1338,22 @@ st.markdown(
         border: 1px solid var(--border);
         border-radius: 999px;
         padding: 0.45rem 0.95rem;
+        color: var(--muted);
+    }
+    .stTabs [aria-selected="true"] {
+        background: var(--accent-soft);
+        border-color: #bfd7e8;
+        color: var(--ink);
+    }
+    .stMarkdown table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+    .stMarkdown table th,
+    .stMarkdown table td {
+        border-bottom: 1px solid var(--border);
+        padding: 0.65rem 0.5rem;
     }
     .stAlert {
         border-radius: 14px;

@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Configure page
 st.set_page_config(
     page_title="UTN International Collaborations",
-    page_icon="🎓",
+    page_icon=":material/insights:",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -45,7 +45,7 @@ if 'selected_professor' not in st.session_state:
 # Show theme customization in sidebar
 with st.sidebar:
     st.markdown("---")
-    st.markdown("## 🎨 Dashboard Settings")
+    st.markdown("## Dashboard Settings")
     
     theme = st.radio(
         "Color Theme",
@@ -87,7 +87,7 @@ import pandas as pd
 
 def show_upload_page():
     """Display CSV upload interface."""
-    st.markdown("## 📤 Upload Publication Data")
+    st.markdown("## Upload Publication Data")
     
     st.markdown("""
     Upload a Scopus CSV export containing publication information and author affiliations.
@@ -111,13 +111,13 @@ def show_upload_page():
             if success:
                 st.success(message)
                 
-                with st.expander("📋 Detected columns in your CSV"):
+                with st.expander("Detected columns in your CSV"):
                     columns = processor.get_available_columns()
                     st.write(f"Total columns detected: {len(columns)}")
                     cols_display = ", ".join(columns)
                     st.caption(cols_display)
                 
-                with st.expander("👁️ Preview of raw data"):
+                with st.expander("Preview of raw data"):
                     st.dataframe(processor.raw_df.head(5), use_container_width=True)
                 
                 st.markdown("---")
@@ -126,13 +126,13 @@ def show_upload_page():
                 process_success, process_message = processor.process()
                 
                 if process_success:
-                    st.success(f"✅ {process_message}")
+                    st.success(process_message)
                     
                     st.session_state.processor = processor
                     st.session_state.processed_df = processor.get_processed_df()
                     st.session_state.data_loaded = True
                     
-                    st.markdown("### 📊 Processing Summary")
+                    st.markdown("### Processing Summary")
                     
                     col1, col2, col3, col4 = st.columns(4)
                     
@@ -149,35 +149,35 @@ def show_upload_page():
                     
                     st.markdown("---")
                     
-                    with st.expander("👁️ Preview of processed international collaborations"):
+                    with st.expander("Preview of processed international collaborations"):
                         preview_df = processor.get_processed_df().head(10)
                         st.dataframe(preview_df, use_container_width=True)
                     
                     st.markdown("---")
-                    st.markdown("### ✨ Next Steps")
+                    st.markdown("### Next Steps")
                     
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
-                        if st.button("📊 View Analytics", use_container_width=True):
+                        if st.button("View Analytics", use_container_width=True):
                             st.session_state.current_page = "Analytics"
                             st.rerun()
                     
                     with col2:
-                        if st.button("👥 View Professors", use_container_width=True):
+                        if st.button("View Professors", use_container_width=True):
                             st.session_state.current_page = "Professor Directory"
                             st.rerun()
                     
                     with col3:
-                        if st.button("🔄 Upload New File", use_container_width=True):
+                        if st.button("Upload New File", use_container_width=True):
                             st.session_state.data_loaded = False
                             st.session_state.processor = None
                             st.rerun()
                 
                 else:
-                    st.error(f"❌ {process_message}")
+                    st.error(process_message)
                     
-                    st.markdown("### ⚠️ Troubleshooting")
+                    st.markdown("### Troubleshooting")
                     
                     st.markdown("""
                     The system could not find international collaborations. This might be because:
@@ -195,9 +195,9 @@ def show_upload_page():
                         st.rerun()
             
             else:
-                st.error(f"❌ {message}")
+                st.error(message)
                 st.markdown("""
-                ### 📝 Supported Format
+                ### Supported Format
                 
                 Export CSV from Scopus with these steps:
                 1. Go to Scopus and search for publications
@@ -209,7 +209,7 @@ def show_upload_page():
                 """)
     
     else:
-        st.markdown("### 📝 How to Export from Scopus")
+        st.markdown("### How to Export from Scopus")
         
         col1, col2 = st.columns(2)
         
@@ -230,12 +230,12 @@ def show_upload_page():
             st.markdown("""
             **CSV Should Contain:**
             
-            - ✓ Authors
-            - ✓ Document Title
-            - ✓ Year
-            - ✓ Source Title
-            - ✓ **Affiliations** (most important!)
-            - ✓ DOI
+            - Authors
+            - Document Title
+            - Year
+            - Source Title
+            - **Affiliations** (most important)
+            - DOI
             
             **Note:** This prototype only supports CSV uploads. Scopus API integration coming later.
             """)
@@ -269,7 +269,7 @@ def show_manual_workflow_page():
         if uploaded_file is not None:
             success, message, manual_df = load_manual_csv(uploaded_file)
             if not success:
-                st.error(f"❌ {message}")
+                st.error(message)
                 return
 
             st.success(message)
@@ -399,7 +399,7 @@ def show_professor_library_page():
                     st.success(f"Saved updated records for {selected_professor}.")
                     st.rerun()
                 except ValueError as exc:
-                    st.error(f"❌ {exc}")
+                    st.error(str(exc))
 
         with col2:
             if st.button("Load into Analytics", use_container_width=True, key=f"load_{selected_professor}"):
@@ -461,14 +461,14 @@ def show_professor_library_page():
                 st.success(f"Added record for {professor_name}.")
                 st.rerun()
             except ValueError as exc:
-                st.error(f"❌ {exc}")
+                st.error(str(exc))
 
 
 def show_analytics_page():
     """Display analytics and overview."""
     
     if not st.session_state.get('data_loaded'):
-        st.error("❌ No data loaded. Please upload a CSV file first.")
+        st.error("No data loaded. Please upload a CSV file first.")
         if st.button("Go to Upload"):
             st.session_state.current_page = "Upload"
             st.rerun()
@@ -477,7 +477,7 @@ def show_analytics_page():
     processor = st.session_state.processor
     df = st.session_state.processed_df
     
-    st.markdown("## 📊 Analytics & Overview")
+    st.markdown("## Analytics and Overview")
     
     st.markdown("### Key Statistics")
     
@@ -486,17 +486,17 @@ def show_analytics_page():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("📈 Total Publications", stats['total_publications'])
+        st.metric("Total Publications", stats['total_publications'])
     with col2:
-        st.metric("🌍 International Rows", stats['total_collaborations'])
+        st.metric("International Rows", stats['total_collaborations'])
     with col3:
-        st.metric("🗺️ Countries", stats['num_countries'])
+        st.metric("Countries", stats['num_countries'])
     with col4:
-        st.metric("🏫 Institutions", stats['num_institutions'])
+        st.metric("Institutions", stats['num_institutions'])
     
     st.markdown("---")
     
-    st.markdown("### 📈 Visualizations")
+    st.markdown("### Visualizations")
     
     tab1, tab2, tab3, tab4 = st.tabs(["By Country", "Over Time", "Top Institutions", "By Professor"])
     
@@ -522,7 +522,7 @@ def show_analytics_page():
     
     st.markdown("---")
     
-    st.markdown("### 📋 All Collaboration Data")
+    st.markdown("### All Collaboration Data")
     
     col1, col2, col3 = st.columns(3)
     
@@ -551,15 +551,15 @@ def show_analytics_page():
     st.dataframe(display_df, use_container_width=True)
     
     st.markdown("---")
-    st.markdown("### 💾 Export Data")
+    st.markdown("### Export Data")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📊 Download as Excel (Professional)", use_container_width=True, key="excel_prof"):
+        if st.button("Download as Excel", use_container_width=True, key="excel_prof"):
             excel_data = create_professional_excel_export(filtered_df)
             st.download_button(
-                label="📥 Download Professional Excel",
+                label="Download Excel",
                 data=excel_data,
                 file_name="international_collaborations.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -567,10 +567,10 @@ def show_analytics_page():
             )
     
     with col2:
-        if st.button("📄 Download as CSV", use_container_width=True):
+        if st.button("Download as CSV", use_container_width=True):
             csv = filtered_df.to_csv(index=False)
             st.download_button(
-                label="📥 Click here to download",
+                label="Download CSV",
                 data=csv,
                 file_name="international_collaborations.csv",
                 mime="text/csv",
@@ -582,12 +582,12 @@ def show_analytics_page():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("👥 View Professor Details", use_container_width=True):
+        if st.button("View Professor Details", use_container_width=True):
             st.session_state.current_page = "Professor Directory"
             st.rerun()
     
     with col2:
-        if st.button("📤 Upload New Data", use_container_width=True):
+        if st.button("Upload New Data", use_container_width=True):
             st.session_state.current_page = "Upload"
             st.rerun()
 
@@ -596,7 +596,7 @@ def show_professor_directory():
     """Display professor directory with collaboration summary."""
     
     if not st.session_state.get('data_loaded'):
-        st.error("❌ No data loaded. Please upload a CSV file first.")
+        st.error("No data loaded. Please upload a CSV file first.")
         if st.button("Go to Upload"):
             st.session_state.current_page = "Upload"
             st.rerun()
@@ -605,7 +605,7 @@ def show_professor_directory():
     processor = st.session_state.processor
     df = st.session_state.processed_df
     
-    st.markdown("## 👥 Professor Directory")
+    st.markdown("## Professor Directory")
     
     st.markdown("Overview of all professors and their international collaborations.")
     
@@ -655,7 +655,7 @@ def show_professor_directory():
         col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
         
         with col1:
-            if st.button(f"👤 {row['Professor']}", key=f"prof_{idx}", use_container_width=True):
+            if st.button(f"{row['Professor']}", key=f"prof_{idx}", use_container_width=True):
                 st.session_state.selected_professor = row['Professor']
                 st.session_state.current_page = "Professor Profile"
                 st.rerun()
@@ -669,7 +669,7 @@ def show_professor_directory():
     
     st.markdown("---")
     
-    st.markdown("### 📊 Overall Summary")
+    st.markdown("### Overall Summary")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Total Professors", len(professors))
@@ -685,13 +685,13 @@ def show_professor_directory():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 🗺️ Top Partner Countries")
+        st.markdown("### Top Partner Countries")
         top_countries = df['Country'].value_counts().head(10)
         for country, count in top_countries.items():
             st.markdown(f"- **{country}**: {count}")
     
     with col2:
-        st.markdown("### 🏫 Top Partner Institutions")
+        st.markdown("### Top Partner Institutions")
         top_institutions = df['International Partner Institution'].value_counts().head(10)
         for inst, count in top_institutions.items():
             display_inst = inst if len(inst) <= 50 else inst[:47] + "..."
@@ -702,17 +702,17 @@ def show_professor_directory():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("📊 View Analytics", use_container_width=True):
+        if st.button("View Analytics", use_container_width=True):
             st.session_state.current_page = "Analytics"
             st.rerun()
     
     with col2:
-        if st.button("📤 Upload New Data", use_container_width=True):
+        if st.button("Upload New Data", use_container_width=True):
             st.session_state.current_page = "Upload"
             st.rerun()
     
     with col3:
-        if st.button("🏠 Home", use_container_width=True):
+        if st.button("Home", use_container_width=True):
             st.session_state.authenticated = False
             st.session_state.data_loaded = False
             st.rerun()
@@ -722,7 +722,7 @@ def show_professor_profile():
     """Display detailed professor profile."""
     
     if not st.session_state.get('data_loaded'):
-        st.error("❌ No data loaded. Please upload a CSV file first.")
+        st.error("No data loaded. Please upload a CSV file first.")
         if st.button("Go to Upload"):
             st.session_state.current_page = "Upload"
             st.rerun()
@@ -747,7 +747,7 @@ def show_professor_profile():
             st.rerun()
         return
     
-    st.markdown(f"## 👤 {selected_professor}")
+    st.markdown(f"## {selected_professor}")
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -769,7 +769,7 @@ def show_professor_profile():
     
     st.markdown("---")
     
-    st.markdown("### 📈 Collaboration Visualizations")
+    st.markdown("### Collaboration Visualizations")
     
     col1, col2 = st.columns(2)
     
@@ -791,13 +791,13 @@ def show_professor_profile():
             st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.markdown("### 🗺️ Countries")
+        st.markdown("### Countries")
         countries = prof_data['Country'].value_counts()
         for country, count in countries.items():
             st.markdown(f"- **{country}**: {count}")
     
     st.markdown("---")
-    st.markdown("### 📋 All Collaborations")
+    st.markdown("### All Collaborations")
     
     col1, col2 = st.columns(2)
     
@@ -821,31 +821,31 @@ def show_professor_profile():
     st.markdown("---")
     
     if st.session_state.get('user_role') == 'Admin':
-        st.markdown("### ✏️ Admin: Edit Data")
+        st.markdown("### Admin: Edit Data")
         
-        with st.expander("📝 Edit Table Rows"):
+        with st.expander("Edit Table Rows"):
             st.markdown("This feature allows you to edit the collaboration data directly.")
             st.info("**Planned features:** Edit institution names, update countries, add notes, mark as reviewed")
         
-        with st.expander("🗑️ Delete Rows"):
+        with st.expander("Delete Rows"):
             st.markdown("Select rows to delete (coming in next phase)")
     
     else:
-        st.markdown("### 🔒 Data Access")
-        if st.button("📥 Request Download Access", use_container_width=True):
-            st.success("✅ **Download Request Submitted** - An administrator will review within 1-2 business days.")
+        st.markdown("### Data Access")
+        if st.button("Request Download Access", use_container_width=True):
+            st.success("Download request submitted. An administrator will review it within 1 to 2 business days.")
     
     st.markdown("---")
     
-    st.markdown("### 💾 Export Professor Data")
+    st.markdown("### Export Professor Data")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📊 Download as Excel", use_container_width=True, key="export_prof_excel"):
+        if st.button("Download as Excel", use_container_width=True, key="export_prof_excel"):
             excel_data = create_professional_excel_export(filtered_df, selected_professor)
             st.download_button(
-                label="📥 Download Excel",
+                label="Download Excel",
                 data=excel_data,
                 file_name=f"collaborations_{selected_professor.replace(' ', '_')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -853,10 +853,10 @@ def show_professor_profile():
             )
     
     with col2:
-        if st.button("📄 Download as CSV", use_container_width=True, key="export_prof_csv"):
+        if st.button("Download as CSV", use_container_width=True, key="export_prof_csv"):
             csv = filtered_df.to_csv(index=False)
             st.download_button(
-                label="📥 Click here to download",
+                label="Download CSV",
                 data=csv,
                 file_name=f"collaborations_{selected_professor.replace(' ', '_')}.csv",
                 mime="text/csv",
@@ -868,17 +868,17 @@ def show_professor_profile():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("👥 Back to Directory", use_container_width=True):
+        if st.button("Back to Directory", use_container_width=True):
             st.session_state.current_page = "Professor Directory"
             st.rerun()
     
     with col2:
-        if st.button("📊 View Analytics", use_container_width=True):
+        if st.button("View Analytics", use_container_width=True):
             st.session_state.current_page = "Analytics"
             st.rerun()
     
     with col3:
-        if st.button("🏠 Home", use_container_width=True):
+        if st.button("Home", use_container_width=True):
             st.session_state.authenticated = False
             st.session_state.data_loaded = False
             st.rerun()
@@ -889,7 +889,7 @@ def show_login_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("## 🎓 UTN International Collaboration Dashboard")
+        st.markdown("## UTN International Collaboration Dashboard")
         st.markdown("### Welcome!")
         st.markdown("---")
         
@@ -912,11 +912,11 @@ def show_login_page():
         Technologie Niederösterreich) and partner institutions worldwide.
         
         **Features:**
-        - 📤 Upload Scopus publication exports
-        - 🏫 View international partner institutions and countries
-        - 👨‍🔬 Track collaboration by professor
-        - 📊 Analyze collaboration trends and statistics
-        - 💾 Export collaboration data
+        - Upload Scopus publication exports
+        - View international partner institutions and countries
+        - Track collaboration by professor
+        - Analyze collaboration trends and statistics
+        - Export collaboration data
         
         #### How it works:
         1. Export publications from Scopus as CSV
@@ -928,7 +928,7 @@ def show_login_page():
         """)
         
         if role == "Admin":
-            st.success("✅ Admin Mode: You have full editing and export capabilities.")
+            st.success("Admin mode: full editing and export access.")
             st.markdown("""
             **Your Admin Capabilities:**
             - Edit collaboration details
@@ -937,7 +937,7 @@ def show_login_page():
             - Manage professor information
             """)
         else:
-            st.info("ℹ️ Viewer Mode: You can view all data but cannot make edits.")
+            st.info("Viewer mode: view-only access to the dashboard.")
             st.markdown("""
             **Your Viewer Capabilities:**
             - View all collaborations and statistics
@@ -948,7 +948,7 @@ def show_login_page():
         
         st.markdown("---")
         
-        if st.button("🚀 Continue to Dashboard", use_container_width=True, type="primary"):
+        if st.button("Continue to Dashboard", use_container_width=True, type="primary"):
             st.session_state.authenticated = True
             st.session_state.current_page = "Upload"
             st.rerun()
@@ -970,30 +970,30 @@ def show_main_content():
     
     # Sidebar navigation after login
     with st.sidebar:
-        st.markdown(f"## 👤 {st.session_state.user_role}")
+        st.markdown(f"## {st.session_state.user_role}")
         st.markdown("---")
         
         st.markdown("### Navigation")
         
         # Navigation buttons
-        if st.button("📤 Upload Data", use_container_width=True):
+        if st.button("Upload Data", use_container_width=True):
             st.session_state.current_page = "Upload"
             st.rerun()
 
-        if st.button("🧾 Manual CSV to Excel", use_container_width=True):
+        if st.button("Manual CSV to Excel", use_container_width=True):
             st.session_state.current_page = "Manual Workflow"
             st.rerun()
 
-        if st.button("🗂️ Stored Professors", use_container_width=True):
+        if st.button("Stored Professors", use_container_width=True):
             st.session_state.current_page = "Stored Professors"
             st.rerun()
         
         if st.session_state.data_loaded:
-            if st.button("📊 Analytics", use_container_width=True):
+            if st.button("Analytics", use_container_width=True):
                 st.session_state.current_page = "Analytics"
                 st.rerun()
             
-            if st.button("👥 Professor Directory", use_container_width=True):
+            if st.button("Professor Directory", use_container_width=True):
                 st.session_state.current_page = "Professor Directory"
                 st.rerun()
             
@@ -1003,7 +1003,7 @@ def show_main_content():
         
         st.markdown("---")
         
-        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
+        if st.button("Logout", use_container_width=True, type="secondary"):
             st.session_state.authenticated = False
             st.session_state.data_loaded = False
             st.session_state.processor = None
@@ -1013,7 +1013,7 @@ def show_main_content():
         
         st.markdown("---")
         st.markdown("""
-        ### ℹ️ Help
+        ### Help
         
         **Upload CSV:** Export publications from Scopus as CSV with all fields
         
@@ -1030,9 +1030,9 @@ def show_main_content():
         
         st.markdown("---")
         if st.session_state.get('user_role') == 'Admin':
-            st.success("✅ Admin Mode Active")
+            st.success("Admin mode active")
         else:
-            st.info("👁️ Viewer Mode Active")
+            st.info("Viewer mode active")
     
     # Route to current page
     if st.session_state.current_page == "Upload":
@@ -1061,10 +1061,64 @@ def show_main_content():
 # Main app
 st.markdown("""
 <style>
+:root {
+    --surface: #ffffff;
+    --surface-soft: #f4f8fc;
+    --surface-accent: #e8f1fb;
+    --border: #d6e1ec;
+    --text: #13324b;
+    --muted: #5a7389;
+    --accent: #1f5f99;
+    --accent-strong: #174a77;
+}
+.stApp {
+    background:
+        radial-gradient(circle at top right, rgba(199, 225, 247, 0.75), transparent 24%),
+        linear-gradient(180deg, #f7fbff 0%, #eef5fb 100%);
+    color: var(--text);
+}
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #ffffff 0%, #eef4fa 100%);
+    border-right: 1px solid var(--border);
+}
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+h1, h2, h3 {
+    color: var(--text);
+    letter-spacing: -0.02em;
+}
+p, li, label, .stMarkdown, .stCaption {
+    color: var(--muted);
+}
 .stMetric {
-    background-color: #f0f2f6;
-    padding: 15px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(241,247,252,0.98) 100%);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(17, 51, 76, 0.06);
+}
+div[data-testid="stFileUploader"],
+div[data-testid="stDataFrame"],
+div[data-testid="stExpander"],
+div[data-testid="stForm"] {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+.stButton > button, .stDownloadButton > button {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+    color: #ffffff;
+    border: none;
     border-radius: 10px;
+    font-weight: 600;
+    padding: 0.6rem 1rem;
+}
+.stButton > button[kind="secondary"] {
+    background: #ffffff;
+    color: var(--text);
+    border: 1px solid var(--border);
 }
 </style>
 """, unsafe_allow_html=True)

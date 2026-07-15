@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: {POSTGRES_DB: "${POSTGRES_DB:-utn}", POSTGRES_USER: "${POSTGRES_USER:-utn}", POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-utn}"], interval: 5s, timeout: 5s, retries: 10}
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes: [redis_data:/data]
+  backend:
+    build: ./backend
+    env_file: .env
+    environment: {DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER:-utn}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-utn}", REDIS_URL: "redis://redis:6379/0"}
+    ports: ["8000:8000"]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_started}}
+    volumes: [exports:/app/exports]
+  worker:
+    build: ./backend
+    command: celery -A app.workers.celery_app.celery worker --loglevel=info
+    env_file: .env
+    environment: {DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER:-utn}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-utn}", REDIS_URL: "redis://redis:6379/0"}
+    depends_on: [backend]
+  beat:
+    build: ./backend
+    command: celery -A app.workers.celery_app.celery beat --loglevel=info
+    env_file: .env
+    environment: {DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER:-utn}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-utn}", REDIS_URL: "redis://redis:6379/0"}
+    depends_on: [backend]
+  frontend:
+    build: {context: ./frontend, args: {BACKEND_INTERNAL_URL: "http://backend:8000"}}
+    environment: {BACKEND_INTERNAL_URL: "http://backend:8000"}
+    ports: ["3000:3000"]
+    depends_on: [backend]
+volumes: {postgres_data: {}, redis_data: {}, exports: {}}

@@ -1,0 +1,1 @@
+export default function Metrics({items}:{items:{label:string,value:string|number}[]}){return <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">{items.map(x=><div className="card p-5" key={x.label}><p className="text-sm text-slate-500">{x.label}</p><p className="text-3xl font-bold mt-1 text-utn-navy">{x.value}</p></div>)}</div>}
